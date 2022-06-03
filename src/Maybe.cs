@@ -40,8 +40,8 @@ internal readonly struct None<T> : Maybe<T>
     public Maybe<R> SelectMany<R>(Func<T, Maybe<R>> _) => new None<R>();
 
     /// <inheritdoc/>
-    public bool Equals(Maybe<T>? maybe)
-        => this.Match<bool>(_ => false, () => true);
+    public bool Equals(Maybe<T> maybe)
+        => maybe.Match<bool>(_ => false, () => true);
 }
 
 /// <summary>
@@ -50,18 +50,18 @@ internal readonly struct None<T> : Maybe<T>
 /// <typeparam name="T">The type of the contained value</typeparam>
 internal readonly struct Just<T> : Maybe<T>
 {
-    private T Value { get; init; }
-    internal Just(T value) { Value = value; }
+    private readonly T value;
+    internal Just(T value) { this.value = value; }
 
-    public R Match<R>(Func<T, R> onJust, Func<R> _) => onJust(Value);
-    public Maybe<R> Select<R>(Func<T, R> f) => new Just<R>(f(Value));
-    public Maybe<R> SelectMany<R>(Func<T, Maybe<R>> f) => f(Value);
+    public R Match<R>(Func<T, R> onJust, Func<R> _) => onJust(value);
+    public Maybe<R> Select<R>(Func<T, R> f) => new Just<R>(f(value));
+    public Maybe<R> SelectMany<R>(Func<T, Maybe<R>> f) => f(value);
 
     /// <inheritdoc/>
-    public bool Equals(Maybe<T>? maybe)
+    public bool Equals(Maybe<T> maybe)
     {
-        T val = Value;
-        return this.Match<bool>(v => val.Equals(v), () => false);
+        T val = value;
+        return maybe.Match<bool>(v => val.Equals(v), () => false);
     }
 }
 
