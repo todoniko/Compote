@@ -1,47 +1,41 @@
 using Compote;
 using FsCheck;
 using FsCheck.Xunit;
+using Gen = Compote.Test.Generators;
 namespace MaybeTest;
-public static class MaybeGenerator<T>
-{
-    private static Gen<Maybe<T>> GenMaybe =
-        Gen.OneOf<Maybe<T>>(
-            Arb.Generate<T>().Select(Maybe.Just),
-            Gen.Constant(Maybe.None<T>()));
 
-    public static Arbitrary<Maybe<T>> Maybes() => Arb.From(GenMaybe);
-}
 
 public class FunctorLaws
 {
     protected T Identity<T>(T x) => x;
 
-    [Property(Arbitrary = new[] { typeof(MaybeGenerator<string>) })]
+    [Property(Arbitrary = new[] { typeof(Gen.Maybe<string>) })]
     public Property SelectIdentity(Maybe<string> x)
         => x.Equals(x.Select(Identity)).ToProperty();
 
-    [Property(Arbitrary = new[] { typeof(MaybeGenerator<int>) })]
+    [Property(Arbitrary = new[] { typeof(Gen.Maybe<int>) })]
     public Property SelectComposition(Maybe<int> x, Func<int, string> f, Func<string, byte> g)
         => x.Select(c => (g(f(c)))).Equals(x.Select(f).Select(g)).ToProperty();
 }
 
 public class MonadLaws
 {
-    private Maybe<T> Wrap<T>(T x) => Maybe.Just(x);
+    private Maybe<T> Wrap<T>(T x) => x;
+
     private Maybe<int> F(string x)
         => String.IsNullOrWhiteSpace(x)
-            ? Maybe.None<int>()
-            : Maybe.Just(x.Max(c => (int)c));
+            ? Maybe<int>.None
+            : x.Max(c => (int)c);
 
     private Maybe<byte> G(int number)
         => number % 10 == 0
-            ? Maybe.None<byte>()
-            : Maybe.Just((byte)(number % 10));
+            ? Maybe<byte>.None
+            : (byte)(number % 10);
 
     private Maybe<DateOnly> H(byte d)
         => d <= 7
-            ? Maybe.Just(DateOnly.FromDayNumber(d))
-            : Maybe.None<DateOnly>();
+            ? DateOnly.FromDayNumber(d)
+            : Maybe<DateOnly>.None;
 
     [Property]
     public Property LeftIdentity(string x)
